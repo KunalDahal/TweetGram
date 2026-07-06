@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from twitter_telegram_bot.app.bot.commands.acc import AccCommandHandler
+from tweetgrambot.app.bot.commands.acc import AccCommandHandler
 
 
 class FakeManager:

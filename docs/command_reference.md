@@ -1,5 +1,13 @@
 # Command Reference
 
+`/start`
+
+Show the command help message.
+
+`/help`
+
+Show the command help message.
+
 `/acc -a <username> <password> <email> <email_password> [proxy]`
 
 Create an account using credentials.

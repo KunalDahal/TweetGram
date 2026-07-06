@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from twitter_telegram_bot.app.services.checkpoint_service import CheckpointService
+from tweetgrambot.app.services.checkpoint_service import CheckpointService
 
 
 class FakeListsRepository:

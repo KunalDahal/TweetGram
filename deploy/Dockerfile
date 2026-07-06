@@ -7,7 +7,7 @@ WORKDIR /app
 COPY requirements.txt pyproject.toml README.MD ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY twitter_telegram_bot ./twitter_telegram_bot
+COPY tweetgrambot ./tweetgrambot
 COPY scripts ./scripts
 COPY deploy/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from twitter_telegram_bot.app.config.environment import get_settings
+from tweetgrambot.app.config.environment import get_settings
 
 
 def main() -> None:

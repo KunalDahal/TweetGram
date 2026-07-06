@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from twitter_telegram_bot.app.core.account_manager import AccountManager
+from tweetgrambot.app.core.account_manager import AccountManager
 
 
 class FakeAccounts:

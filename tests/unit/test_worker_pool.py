@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from twitter_telegram_bot.app.core.worker_pool import WorkerPool
+from tweetgrambot.app.core.worker_pool import WorkerPool
 
 
 class FakeWorker:
