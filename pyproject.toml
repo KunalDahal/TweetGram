@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "twitter-telegram-bot"
+version = "0.1.0"
+description = "Telegram-controlled Twitter/X list processing bot."
+readme = "README.MD"
+requires-python = ">=3.11"
+dependencies = [
+    "aiohttp>=3.9",
+    "cryptography>=42.0",
+    "motor>=3.4",
+    "pydantic>=2.7",
+    "pydantic-settings>=2.2",
+    "python-telegram-bot>=21.0",
+    "structlog>=24.1",
+    "twscrape>=0.15",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "ruff>=0.5",
+]
+
+[tool.setuptools.packages.find]
+include = ["twitter_telegram_bot*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
