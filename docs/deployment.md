@@ -1,9 +1,9 @@
 # Deployment
 
-Deployment target is one Docker container on a VPS using MongoDB Atlas.
+Deployment target is Docker Compose on a VPS, with the bot and MongoDB running as containers.
 
 1. Copy `.env.example` to `.env` and fill in values.
-2. Allow the VPS IP address in MongoDB Atlas network access.
+2. Keep `MONGODB_URI=mongodb://mongo:27017` so the bot connects to the Compose MongoDB service.
 3. Build and run with Docker Compose from the repository root:
 
 ```bash

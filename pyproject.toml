@@ -3,7 +3,7 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "twitter-telegram-bot"
+name = "tweetgrambot"
 version = "0.1.0"
 description = "Telegram-controlled Twitter/X list processing bot."
 readme = "README.MD"
@@ -27,7 +27,7 @@ dev = [
 ]
 
 [tool.setuptools.packages.find]
-include = ["twitter_telegram_bot*"]
+include = ["tweetgrambot*"]
 
 [tool.ruff]
 line-length = 100

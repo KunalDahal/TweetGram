@@ -14,7 +14,7 @@ python -m venv .venv
 pip install -e .[dev]
 copy .env.example .env
 python scripts/verify_environment.py
-python -m twitter_telegram_bot.app.main
+python -m tweetgrambot.app.main
 ```
 
 ## Key Commands

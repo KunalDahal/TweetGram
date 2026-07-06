@@ -72,3 +72,6 @@ dmypy.json
 # Temporary files
 *.tmp
 *.temp
+storage/
+tests/
+.agents/

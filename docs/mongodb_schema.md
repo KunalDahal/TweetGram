@@ -9,7 +9,7 @@ Collections:
 - `worker_logs`
 - `app_settings`
 
-Required indexes are defined in `twitter_telegram_bot/app/database/indexes.py`.
+Required indexes are defined in `tweetgrambot/app/database/indexes.py`.
 
 The important delivery invariant is:
 

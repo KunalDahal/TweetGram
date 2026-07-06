@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import asyncio
 
-from twitter_telegram_bot.app.config.environment import get_settings
-from twitter_telegram_bot.app.database.indexes import ensure_indexes
-from twitter_telegram_bot.app.database.mongo import Mongo
+from tweetgrambot.app.config.environment import get_settings
+from tweetgrambot.app.database.indexes import ensure_indexes
+from tweetgrambot.app.database.mongo import Mongo
 
 
 async def main() -> None:

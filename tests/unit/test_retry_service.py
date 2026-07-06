@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from twitter_telegram_bot.app.services.retry_service import RetryExhaustedError, RetryService
+from tweetgrambot.app.services.retry_service import RetryExhaustedError, RetryService
 
 
 @pytest.mark.asyncio

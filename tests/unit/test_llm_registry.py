@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-from twitter_telegram_bot.app.services.llm.base import LLMProvider
-from twitter_telegram_bot.app.services.llm.provider_registry import ProviderRegistry
+from tweetgrambot.app.services.llm.base import LLMProvider
+from tweetgrambot.app.services.llm.provider_registry import ProviderRegistry
 
 
 class FakeProvider(LLMProvider):
