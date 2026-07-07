@@ -70,6 +70,7 @@ class AccountManager:
         account = Account(
             account_id=account_id,
             username=username,
+            cycle_delay_seconds=await self._default_cycle_delay_seconds(),
             auth=AccountAuth(
                 mode="credentials",
                 password_enc=self.encryption.encrypt(password),
@@ -96,6 +97,7 @@ class AccountManager:
         account = Account(
             account_id=account_id,
             username=username,
+            cycle_delay_seconds=await self._default_cycle_delay_seconds(),
             auth=AccountAuth(
                 mode="cookies",
                 auth_token_enc=self.encryption.encrypt(auth_token),
@@ -108,6 +110,33 @@ class AccountManager:
             await self.proxy_manager.add_proxy(account_id, proxy)
         return account_id
 
+    async def refresh_cookies(
+        self,
+        *,
+        account_id: str,
+        auth_token: str,
+        ct0: str,
+        proxy: str | None = None,
+    ) -> None:
+        account = await self.accounts.get(account_id)
+        if not account:
+            raise ValueError(f"Unknown account: {account_id}")
+        await self.validator.validate_cookies(
+            username=account["username"],
+            auth_token=auth_token,
+            ct0=ct0,
+            proxy=proxy,
+        )
+        if self.worker_pool:
+            await self.worker_pool.stop(account_id)
+        await self.accounts.update_cookie_auth(
+            account_id,
+            auth_token_enc=self.encryption.encrypt(auth_token),
+            ct0_enc=self.encryption.encrypt(ct0),
+        )
+        if proxy:
+            await self.proxy_manager.add_proxy(account_id, proxy)
+
     async def remove_account(self, account_id: str) -> None:
         await self.worker_pool.stop(account_id)
         await self.accounts.delete_account(account_id)
@@ -116,6 +145,14 @@ class AccountManager:
         await self.jobs.delete_many({"account_id": account_id})
         await self.logs.delete_many({"account_id": account_id})
         self.temp_storage.remove_account_directory(account_id)
+
+    async def _default_cycle_delay_seconds(self) -> int:
+        if not self.settings:
+            return 900
+        runtime = await self.settings.get_runtime()
+        if not runtime:
+            return 900
+        return int(runtime.get("default_cycle_delay_seconds") or 900)
 
     async def assign_list(self, account_id: str, twitter_list_id: str) -> None:
         account = await self.accounts.get(account_id)
@@ -129,6 +166,8 @@ class AccountManager:
             sequence=await self.lists.next_sequence(account_id),
             baseline_post_id=baseline,
             baseline_observed_at=utc_now(),
+            last_delivered_post_id=baseline,
+            resume_cursor="empty_baseline" if baseline is None else None,
         )
         try:
             await self.lists.create(assignment)

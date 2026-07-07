@@ -5,6 +5,7 @@ import shlex
 from telegram import Update
 from telegram.ext import ContextTypes
 
+from tweetgrambot.app.bot.commands.llm import LlmCommandHandler
 from tweetgrambot.app.bot.responses import account_messages
 from tweetgrambot.app.core.account_manager import AccountManager
 
@@ -12,10 +13,17 @@ from tweetgrambot.app.core.account_manager import AccountManager
 class AccCommandHandler:
     def __init__(self, manager: AccountManager) -> None:
         self.manager = manager
+        self.llm = LlmCommandHandler(manager)
 
     async def handle(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         text = update.effective_message.text if update.effective_message else ""
         args = shlex.split(text)[1:]
+        if len(args) == 2 and args[1] == "-lm":
+            await update.effective_message.reply_text(
+                f"Choose LLM provider for {args[0]}:",
+                reply_markup=self.llm.provider_keyboard(args[0]),
+            )
+            return
         response = await self.dispatch(args)
         await update.effective_message.reply_text(response)
 
@@ -46,6 +54,16 @@ class AccCommandHandler:
                 proxy=rest[0] if rest else None,
             )
             return account_messages.account_created(account_id)
+
+        if len(args) >= 4 and args[1] == "-c":
+            account_id, _, auth_token, ct0, *rest = args
+            await self.manager.refresh_cookies(
+                account_id=account_id,
+                auth_token=auth_token,
+                ct0=ct0,
+                proxy=rest[0] if rest else None,
+            )
+            return account_messages.account_cookies_refreshed(account_id)
 
         if args[0] == "-r":
             account_id = args[1]

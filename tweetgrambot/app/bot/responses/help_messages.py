@@ -2,6 +2,7 @@ HELP_MESSAGE = """TweetGramBot commands:
 
 /acc -a <username> <password> <email> <email_password> [proxy]
 /acc -c <username> <auth_token> <ct0> [proxy]
+/acc <account_id> -c <auth_token> <ct0> [proxy]
 /acc -r <account_id>
 /acc -l <twitter_list_id> -a <account_id>
 /acc -l <twitter_list_id> -r <account_id>
@@ -11,7 +12,7 @@ HELP_MESSAGE = """TweetGramBot commands:
 /acc -p <account_id> -r <proxy>
 /acc <account_id> -ka <llm_key>
 /acc <account_id> -kr <llm_key>
-/acc <account_id> -lm <provider> <model>
+/acc <account_id> -lm
 /acc -s
 /prompt "<text>"
 
