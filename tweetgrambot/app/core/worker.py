@@ -13,7 +13,7 @@ from tweetgrambot.app.database.repositories.settings_repository import SettingsR
 from tweetgrambot.app.services.alert_service import AlertService
 from tweetgrambot.app.services.post_extractor import PostExtractor
 from tweetgrambot.app.services.proxy_manager import ProxyManager
-from tweetgrambot.app.services.twscrape_adapter import TwscrapeAdapter
+from tweetgrambot.app.services.twscrape_adapter import TwscrapeAdapter, TwscrapeAuthenticationError
 from tweetgrambot.app.utils.ids import worker_id_for
 
 
@@ -77,12 +77,26 @@ class Worker:
                 break
             try:
                 await self._run_cycle(account)
+            except TwscrapeAuthenticationError as exc:
+                reason = str(exc) or "X authentication failed; refresh auth_token and ct0."
+                await self.accounts.mark_auth_failed(self.account_id, reason)
+                logger.warning("Worker paused for auth refresh account_id=%s reason=%s", self.account_id, reason)
+                await self.alerts.notify_admins(
+                    f"Worker {self.account_id} paused: X authentication failed. "
+                    f"Refresh cookies with /acc {self.account_id} -c <auth_token> <ct0>."
+                )
+                return
             except Exception as exc:
                 await self.accounts.set_worker_status(self.account_id, "error")
                 logger.exception("Worker paused after error for account_id=%s", self.account_id)
                 await self.alerts.notify_admins(f"Worker {self.account_id} paused: {exc}")
                 return
-            delay = int(account.get("cycle_delay_seconds") or 900)
+            runtime_settings = await self.settings.get_runtime() or {}
+            delay = int(
+                account.get("cycle_delay_seconds")
+                or runtime_settings.get("default_cycle_delay_seconds")
+                or 900
+            )
             logger.info(
                 "Worker cycle complete for account_id=%s; next_cycle_seconds=%s",
                 self.account_id,
@@ -121,9 +135,31 @@ class Worker:
         if not llm.get("provider") or not llm.get("model"):
             raise ValueError("LLM provider and model must be configured before running.")
         await self.lists.mark_cycle_started(self.account_id, assignment["twitter_list_id"])
+
+        since_post_id = assignment.get("last_delivered_post_id") or assignment.get("baseline_post_id")
+        if since_post_id is None and assignment.get("resume_cursor") != "empty_baseline":
+            latest_post_id = await self.scraper.newest_post_id_for_list(
+                assignment["twitter_list_id"],
+                account,
+                proxy,
+            )
+            await self.lists.initialize_checkpoint(
+                self.account_id,
+                assignment["twitter_list_id"],
+                latest_post_id,
+            )
+            logger.info(
+                "Initialized list checkpoint for account_id=%s twitter_list_id=%s post_id=%s",
+                self.account_id,
+                assignment["twitter_list_id"],
+                latest_post_id,
+            )
+            await self.lists.mark_cycle_completed(self.account_id, assignment["twitter_list_id"])
+            return
+
         posts = await self.scraper.new_posts_for_list(
             twitter_list_id=assignment["twitter_list_id"],
-            since_post_id=assignment.get("last_delivered_post_id") or assignment.get("baseline_post_id"),
+            since_post_id=since_post_id,
             account=account,
             proxy=proxy,
         )

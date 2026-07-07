@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 
 from telegram import Update
-from telegram.ext import Application, CommandHandler, ContextTypes
+from telegram.ext import Application, CallbackQueryHandler, CommandHandler, ContextTypes
 
 from tweetgrambot.app.bot.authorization import is_authorized
 from tweetgrambot.app.bot.commands.acc import AccCommandHandler
@@ -46,6 +46,20 @@ def build_application(settings: Settings, manager: AccountManager) -> Applicatio
         except Exception as exc:
             await update.effective_message.reply_text(command_error(exc))
 
+    async def guarded_llm_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        user_id = update.effective_user.id if update.effective_user else None
+        logger.info("Received LLM callback from user_id=%s", user_id)
+        if not is_authorized(user_id, settings.allowed_telegram_user_ids):
+            logger.warning("Rejected unauthorized LLM callback from user_id=%s", user_id)
+            if update.callback_query:
+                await update.callback_query.answer(UNAUTHORIZED, show_alert=True)
+            return
+        try:
+            await acc.llm.handle_callback(update, context)
+        except Exception as exc:
+            if update.callback_query:
+                await update.callback_query.edit_message_text(command_error(exc))
+
     async def guarded_help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         user_id = update.effective_user.id if update.effective_user else None
         logger.info("Received help command from user_id=%s", user_id)
@@ -59,4 +73,5 @@ def build_application(settings: Settings, manager: AccountManager) -> Applicatio
     app.add_handler(CommandHandler("help", guarded_help))
     app.add_handler(CommandHandler("acc", guarded_acc))
     app.add_handler(CommandHandler("prompt", guarded_prompt))
+    app.add_handler(CallbackQueryHandler(guarded_llm_callback, pattern=r"^llm:"))
     return app

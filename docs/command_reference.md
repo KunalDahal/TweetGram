@@ -14,7 +14,11 @@ Create an account using credentials.
 
 `/acc -c <username> <auth_token> <ct0> [proxy]`
 
-Create an account using cookies.
+Create an account using cookies. `auth_token` and `ct0` are temporary X session credentials; X does not publish a fixed expiry, and either value can stop working after logout, password reset, session revocation, security checks, suspicious-login detection, or server-side rotation. Refresh both cookies together from the same browser session when authentication fails.
+
+`/acc <account_id> -c <auth_token> <ct0> [proxy]`
+
+Replace an existing account's stored cookies after authentication fails. The worker is left stopped after refresh; reactivate it with `/acc -i <account_id>`.
 
 `/acc -r <account_id>`
 
@@ -52,9 +56,13 @@ Add or replace an account LLM key.
 
 Remove an account LLM key after fingerprint verification.
 
+`/acc <account_id> -lm`
+
+Choose the account LLM provider and model using Telegram buttons.
+
 `/acc <account_id> -lm <provider> <model>`
 
-Set the account LLM provider and model.
+Set the account LLM provider and model directly.
 
 `/acc -s`
 

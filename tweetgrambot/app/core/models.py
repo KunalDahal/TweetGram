@@ -11,7 +11,7 @@ def utc_now() -> datetime:
 
 
 AuthMode = Literal["credentials", "cookies"]
-WorkerStatus = Literal["inactive", "starting", "running", "stopping", "stopped", "error"]
+WorkerStatus = Literal["inactive", "starting", "running", "stopping", "stopped", "error", "auth_error"]
 JobStatus = Literal[
     "discovered",
     "downloading",
@@ -52,7 +52,7 @@ class Account(BaseModel):
     is_active: bool = False
     worker_status: WorkerStatus = "inactive"
     active_proxy_id: str | None = None
-    cycle_delay_seconds: int = 900
+    cycle_delay_seconds: int | None = None
     created_at: datetime = Field(default_factory=utc_now)
     updated_at: datetime = Field(default_factory=utc_now)
 
@@ -144,4 +144,5 @@ class AppSettings(BaseModel):
     global_llm_prompt: str = ""
     global_prompt_version: int = 1
     default_cycle_delay_seconds: int = 900
+    max_retry_attempts: int = 3
     updated_at: datetime = Field(default_factory=utc_now)

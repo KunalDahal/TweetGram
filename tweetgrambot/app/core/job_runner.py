@@ -33,7 +33,10 @@ class JobRunner:
         if not account.get("llm", {}).get("api_key_enc"):
             raise ValueError("LLM API key is missing.")
         await self.jobs.set_status(job["_id"], "downloading")
-        await self.retry.run(lambda: self.media_downloader.download_job_media(job))
+        downloaded_media = await self.retry.run(lambda: self.media_downloader.download_job_media(job))
+        if downloaded_media != job.get("media", []):
+            job["media"] = downloaded_media
+            await self.jobs.save_media(job["_id"], downloaded_media)
 
         caption = job.get("llm", {}).get("generated_caption")
         if not caption:
@@ -45,7 +48,7 @@ class JobRunner:
                     api_key=api_key,
                     model=job["llm"]["model"],
                     global_prompt=runtime_settings.get("global_llm_prompt", ""),
-                    source_text=job["source"].get("source_caption") or "",
+                    source_text=self._caption_context(job),
                     quote_text=job["source"].get("quote_caption"),
                     source_url=job["source"]["source_url"],
                 )
@@ -58,3 +61,24 @@ class JobRunner:
         await self.checkpoints.mark_delivered(
             job["account_id"], job["twitter_list_id"], job["source_post_id"]
         )
+
+    def _caption_context(self, job: dict) -> str:
+        source = job["source"]
+        lines = [
+            f"Post type: {source.get('type') or 'original'}",
+            f"Post text: {source.get('source_caption') or '<no text>'}",
+        ]
+        if source.get("quote_caption"):
+            lines.append(f"Quoted post text: {source['quote_caption']}")
+        if source.get("reposted_post_id"):
+            lines.append(f"Reposted post ID: {source['reposted_post_id']}")
+        if source.get("quoted_post_id"):
+            lines.append(f"Quoted post ID: {source['quoted_post_id']}")
+        if source.get("published_at"):
+            lines.append(f"Published at: {source['published_at']}")
+        if job.get("media"):
+            media_urls = [item.get("source_url") for item in job["media"] if item.get("source_url")]
+            lines.append(f"Media count: {len(media_urls)}")
+            lines.extend(f"Media URL: {url}" for url in media_urls)
+        lines.append(f"Source URL: {source['source_url']}")
+        return "\n".join(lines)
