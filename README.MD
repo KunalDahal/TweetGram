@@ -21,12 +21,28 @@ python -m tweetgrambot.app.main
 
 - `/acc -a <username> <password> <email> <email_password> [proxy]`
 - `/acc -c <username> <auth_token> <ct0> [proxy]`
+- `/acc <account_id> -c <auth_token> <ct0> [proxy]`
 - `/acc -l <twitter_list_id> -a <account_id>`
 - `/acc -i <account_id>`
 - `/acc -h <account_id>`
 - `/acc <account_id> -ka <llm_key>`
-- `/acc <account_id> -lm <provider> <model>`
+- `/acc <account_id> -lm`
 - `/prompt "<text>"`
 - `/acc -s`
 
 See `docs/command_reference.md` for the full command list.
+
+## X Cookie Sessions
+
+`auth_token` and `ct0` are temporary X session credentials. X does not publish a fixed lifetime for either cookie, so treat them as renewable credentials rather than long-term unattended auth. They can last from hours to weeks or longer, but may stop working after logout, cookie clearing, password changes or resets, session revocation, security checks, account locks, suspicious-login detection, or server-side session rotation.
+
+A password reset explicitly logs out active X sessions, so any captured cookies should be treated as invalid afterward. X also lets you review and revoke sessions through its Apps and sessions controls.
+
+For `twscrape`, design around renewal:
+
+1. Add the account with `/acc -c <username> <auth_token> <ct0> [proxy]`.
+2. Detect authentication failures such as 401 or login-required responses.
+3. Export fresh `auth_token` and `ct0` values from a newly logged-in browser session.
+4. Replace the cookies with `/acc <account_id> -c <auth_token> <ct0> [proxy]`.
+
+Refresh `auth_token` and `ct0` together from the same browser session because `ct0` can rotate independently.
