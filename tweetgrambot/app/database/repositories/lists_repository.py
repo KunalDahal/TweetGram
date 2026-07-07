@@ -47,3 +47,23 @@ class ListsRepository(MongoRepository):
             {"account_id": account_id, "twitter_list_id": twitter_list_id},
             {"$set": {"last_delivered_post_id": source_post_id}},
         )
+
+    async def initialize_checkpoint(
+        self, account_id: str, twitter_list_id: str, source_post_id: str | None
+    ) -> None:
+        await self.touch(
+            {
+                "account_id": account_id,
+                "twitter_list_id": twitter_list_id,
+                "last_delivered_post_id": None,
+                "baseline_post_id": None,
+            },
+            {
+                "$set": {
+                    "baseline_post_id": source_post_id,
+                    "baseline_observed_at": utc_now(),
+                    "last_delivered_post_id": source_post_id,
+                    "resume_cursor": "empty_baseline" if source_post_id is None else None,
+                }
+            },
+        )

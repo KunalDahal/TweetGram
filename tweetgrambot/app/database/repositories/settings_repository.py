@@ -13,20 +13,38 @@ class SettingsRepository(MongoRepository):
     async def get_runtime(self) -> dict[str, Any] | None:
         return await self.collection.find_one({"_id": RUNTIME_SETTINGS_ID})
 
-    async def ensure_runtime(self, telegram_target_channel_id: str, default_delay: int) -> None:
+    async def sync_runtime_from_env(
+        self,
+        *,
+        telegram_target_channel_id: str,
+        default_cycle_delay_seconds: int,
+        max_retry_attempts: int,
+    ) -> dict[str, Any] | None:
+        previous = await self.get_runtime()
         await self.collection.update_one(
             {"_id": RUNTIME_SETTINGS_ID},
             {
+                "$set": {
+                    "telegram_target_channel_id": telegram_target_channel_id,
+                    "default_cycle_delay_seconds": default_cycle_delay_seconds,
+                    "max_retry_attempts": max_retry_attempts,
+                    "updated_at": utc_now(),
+                },
                 "$setOnInsert": {
                     "_id": RUNTIME_SETTINGS_ID,
-                    "telegram_target_channel_id": telegram_target_channel_id,
                     "global_llm_prompt": "",
                     "global_prompt_version": 1,
-                    "default_cycle_delay_seconds": default_delay,
-                    "updated_at": utc_now(),
                 }
             },
             upsert=True,
+        )
+        return previous
+
+    async def ensure_runtime(self, telegram_target_channel_id: str, default_delay: int) -> None:
+        await self.sync_runtime_from_env(
+            telegram_target_channel_id=telegram_target_channel_id,
+            default_cycle_delay_seconds=default_delay,
+            max_retry_attempts=3,
         )
 
     async def update_prompt(self, prompt: str) -> int:
