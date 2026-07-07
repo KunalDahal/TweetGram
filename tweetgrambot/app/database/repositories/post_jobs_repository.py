@@ -39,6 +39,12 @@ class PostJobsRepository(MongoRepository):
             {"$set": {"llm.generated_caption": caption, "status": "caption_generated", "updated_at": utc_now()}},
         )
 
+    async def save_media(self, job_id, media: list[dict[str, Any]]) -> None:
+        await self.collection.update_one(
+            {"_id": job_id},
+            {"$set": {"media": media, "status": "downloaded", "updated_at": utc_now()}},
+        )
+
     async def mark_sent(self, job_id, message_ids: list[int]) -> None:
         await self.collection.update_one(
             {"_id": job_id},
